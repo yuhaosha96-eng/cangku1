@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>生科2601 课表</title>
+<meta name="theme-color" content="#f2f4f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b0f17" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="课表">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<style>
+:root{
+  --bg:#f2f4f8; --card:#fff; --ink:#0f172a; --ink2:#5f6f86; --ink3:#93a1b3;
+  --line:#e6eaf1; --accent:#2563eb; --accent-soft:#e8f0ff;
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 6px 20px rgba(15,23,42,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0b0f17; --card:#151b26; --ink:#eef2f8; --ink2:#9aa8bd; --ink3:#6d7b90;
+         --line:#232c3b; --accent:#5b8cff; --accent-soft:#1b2740;
+         --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.35); }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink)}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:calc(84px + env(safe-area-inset-bottom));
+}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px}
+
+/* ---------- header ---------- */
+header{
+  position:sticky;top:0;z-index:20;
+  background:var(--bg);
+  background:color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter:saturate(180%) blur(18px);
+  -webkit-backdrop-filter:saturate(180%) blur(18px);
+  border-bottom:1px solid var(--line);
+  padding:calc(10px + env(safe-area-inset-top)) 0 10px;
+}
+.hrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.hd{font-size:22px;font-weight:700;letter-spacing:.3px}
+.hd em{font-style:normal;color:var(--accent)}
+.hw{font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums;text-align:right;line-height:1.35}
+.hw b{color:var(--ink);font-weight:600}
+.nowline{margin-top:8px;font-size:13.5px;color:var(--ink2);display:flex;align-items:center;gap:7px}
+.dot{width:7px;height:7px;border-radius:50%;background:#22c55e;flex:none;box-shadow:0 0 0 3px rgba(34,197,94,.16)}
+.dot.off{background:var(--ink3);box-shadow:none}
+.nowline b{color:var(--ink);font-weight:600}
+.nowline .cd{color:var(--accent);font-weight:600}
+
+/* ---------- cards ---------- */
+.day{margin-top:18px}
+.dayhd{display:flex;align-items:baseline;gap:8px;margin:0 2px 10px;font-size:13px;color:var(--ink2)}
+.dayhd b{font-size:16px;color:var(--ink);font-weight:700}
+.dayhd .rest{margin-left:auto;color:var(--ink3)}
+.card{
+  position:relative;display:flex;gap:14px;overflow:hidden;
+  background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:15px 16px 15px 18px;margin-bottom:11px;box-shadow:var(--shadow);
+}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c)}
+.card.past{opacity:.52}
+.card.live{border-color:var(--c);box-shadow:0 0 0 2px color-mix(in srgb, var(--c) 22%, transparent),var(--shadow)}
+.time{flex:none;width:76px;font-variant-numeric:tabular-nums}
+.time .s{font-size:17px;font-weight:700;letter-spacing:.2px}
+.time .e{font-size:12px;color:var(--ink3);margin-top:2px}
+.time .p{font-size:11px;color:var(--ink3);margin-top:6px}
+.body{flex:1;min-width:0}
+.name{font-size:17px;font-weight:700;line-height:1.3;word-break:break-word}
+.room{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:14.5px;color:var(--c);font-weight:600}
+.room.und{color:#c2410c}
+.room svg{width:15px;height:15px;flex:none}
+.meta{margin-top:5px;font-size:12.5px;color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag{
+  display:inline-block;font-size:11px;padding:2px 7px;border-radius:6px;margin-left:6px;
+  background:var(--accent-soft);color:var(--accent);font-weight:600;vertical-align:2px
+}
+.lv{position:absolute;right:14px;top:14px;font-size:11px;font-weight:700;color:#fff;background:var(--c);
+    padding:2px 8px;border-radius:999px;letter-spacing:.4px}
+
+.empty{background:var(--card);border:1px dashed var(--line);border-radius:16px;padding:26px 18px;text-align:center;color:var(--ink3);font-size:14px}
+.empty b{display:block;font-size:15px;color:var(--ink2);margin-bottom:4px}
+
+/* ---------- week strip ---------- */
+.strip{display:flex;gap:6px;margin:14px 0 4px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.strip::-webkit-scrollbar{display:none}
+.dchip{
+  flex:none;min-width:46px;text-align:center;padding:8px 6px;border-radius:13px;
+  background:var(--card);border:1px solid var(--line);font-size:12px;color:var(--ink2);
+}
+.dchip b{display:block;font-size:14px;color:var(--ink);font-weight:600;margin-top:1px}
+.dchip.on{background:var(--accent);border-color:var(--accent)}
+.dchip.on,.dchip.on b{color:#fff}
+.dchip .pt{display:block;width:5px;height:5px;border-radius:50%;background:var(--accent);margin:4px auto 0}
+.dchip.on .pt{background:#fff}
+.dchip.none .pt{background:transparent}
+
+.wknav{display:flex;align-items:center;gap:8px;margin:16px 0 2px}
+.wknav button{
+  border:1px solid var(--line);background:var(--card);color:var(--ink2);
+  width:34px;height:34px;border-radius:11px;font-size:15px;line-height:1;cursor:pointer
+}
+.wknav .t{flex:1;text-align:center;font-size:14px;font-weight:600}
+.wknav .t span{color:var(--ink3);font-weight:400;margin-left:6px;font-size:12.5px}
+
+/* ---------- list ---------- */
+.item{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);
+      border-radius:14px;padding:13px 14px;margin-bottom:9px;box-shadow:var(--shadow)}
+.swatch{width:8px;height:8px;border-radius:3px;flex:none;margin-top:6px;background:var(--c)}
+.item .n{font-size:15px;font-weight:600}
+.item .sub{font-size:12.5px;color:var(--ink2);margin-top:3px;line-height:1.5}
+.item .sub span{color:var(--ink3)}
+
+/* ---------- tabbar ---------- */
+nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;
+  display:flex;justify-content:center;gap:4px;
+  padding:8px 16px calc(8px + env(safe-area-inset-bottom));
+  background:var(--bg);
+  background:color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter:saturate(180%) blur(18px);-webkit-backdrop-filter:saturate(180%) blur(18px);
+  border-top:1px solid var(--line);
+}
+nav button{
+  flex:1;max-width:150px;border:0;background:transparent;color:var(--ink3);
+  font-size:12px;font-family:inherit;padding:5px 0;cursor:pointer;display:flex;
+  flex-direction:column;align-items:center;gap:3px;border-radius:10px
+}
+nav button svg{width:21px;height:21px}
+nav button.on{color:var(--accent);font-weight:600}
+
+.hint{margin:14px 2px 0;font-size:12px;color:var(--ink3);line-height:1.6}
+.banner{
+  margin:16px 0 0;padding:12px 14px;border-radius:14px;background:var(--accent-soft);
+  color:var(--accent);font-size:13px;line-height:1.55;display:flex;gap:10px;align-items:flex-start
+}
+.banner b{font-weight:700}
+.banner .x{margin-left:auto;color:var(--accent);opacity:.6;font-size:16px;line-height:1;cursor:pointer;padding:0 2px}
+.sec{margin:22px 2px 10px;font-size:12.5px;color:var(--ink3);letter-spacing:.4px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="hrow">
+      <div class="hd" id="hd">今天</div>
+      <div class="hw" id="hw"></div>
+    </div>
+    <div class="nowline" id="nowline"></div>
+  </div>
+</header>
+
+<main class="wrap" id="main"></main>
+
+<nav>
+  <button data-tab="today" class="on">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+    今天
+  </button>
+  <button data-tab="week">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M9 9v12M15 9v12"/></svg>
+    本周
+  </button>
+  <button data-tab="all">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+    课程
+  </button>
+</nav>
+
+<script>
+/* ================= 数据（来自 生科2601班级课表.xls） ================= */
+const W1 = new Date(2026, 8, 7);      // 第1周 周一 2026-09-07
+const SEM_WEEKS = 20;
+
+const PERIODS = [
+  {p:"1-2",  s:"08:00", e:"09:40"},
+  {p:"3-4",  s:"10:00", e:"11:40"},
+  {p:"5-6",  s:"14:00", e:"15:40"},
+  {p:"7-8",  s:"16:00", e:"17:40"},
+  {p:"9-10", s:"19:00", e:"20:40"}
+];
+
+// d: 1=周一 … 6=周六 ; p: PERIODS 下标 ; w: 周次 ; alt: 0每周 1双周 2单周 ; span: 连上几大节
+const COURSES = [
+  {n:"习概",        full:"习近平新时代中国特色社会主义思想概论", t:"贺才乐", room:"A座119",        d:1, p:0, w:"2-4,8-20", alt:1, c:"#2563eb"},
+  {n:"高数C2",      full:"高等数学C2",                        t:"张佃中", room:"B座413",        d:1, p:1, w:"2-4,8-20", alt:1, c:"#6d4aff"},
+  {n:"体育（一）",   full:"体育（一）",                          t:"杨志宏", room:"地点待定",      d:1, p:3, w:"2-4,8-20", alt:0, c:"#16a34a"},
+  {n:"高数C2",      full:"高等数学C2",                        t:"张佃中", room:"B座413",        d:2, p:2, w:"2-4,8-20", alt:0, c:"#6d4aff"},
+  {n:"新生课",      full:"新生课",                            t:"刘静 等", room:"B座110",      d:2, p:3, w:"2-4,9-13", alt:0, c:"#8b5cf6"},
+  {n:"大学英语（一）", full:"大学英语（一）",                    t:"胡良骥", room:"外语网络楼347",  d:3, p:0, w:"2-4,8-20", alt:0, c:"#0d9488"},
+  {n:"基础化学",    full:"基础化学",                          t:"邓留",   room:"B座311",        d:3, p:1, w:"2-4,9-19", alt:0, c:"#e11d48"},
+  {n:"心理健康（一）", full:"大学生心理健康教育（一）",            t:"傅建平", room:"C座408",        d:3, p:4, w:"10-17",    alt:2, c:"#0891b2"},
+  {n:"基础化学",    full:"基础化学",                          t:"邓留",   room:"A座201",        d:4, p:1, w:"2-4,9-19", alt:0, c:"#e11d48"},
+  {n:"习概",        full:"习近平新时代中国特色社会主义思想概论", t:"贺才乐", room:"C座502",        d:4, p:3, w:"2-4,8-20", alt:0, c:"#2563eb"},
+  {n:"国家安全教育", full:"国家安全教育",                        t:"晏湘涛", room:"C座205",        d:5, p:0, w:"15-20",    alt:0, c:"#d97706"},
+  {n:"高数C2",      full:"高等数学C2",                        t:"张佃中", room:"B座413",        d:5, p:1, w:"2-4,8-20", alt:0, c:"#6d4aff"},
+  {n:"基础化学实验", full:"基础化学实验",                        t:"肖旭贤", room:"地点待定",      d:5, p:2, w:"3-4,9-18", alt:0, c:"#ea580c", span:2}
+];
+
+/* ================= 工具 ================= */
+const DAYNAMES = ["周日","周一","周二","周三","周四","周五","周六"];
+const MS_DAY = 86400000;
+
+function d0(x){ const d = new Date(x); d.setHours(0,0,0,0); return d; }
+function today(){ return d0(new Date()); }
+
+function weekOf(date){
+  return Math.floor((d0(date) - d0(W1)) / (7*MS_DAY)) + 1;
+}
+function weekMonday(n){
+  const d = new Date(W1); d.setDate(d.getDate() + (n-1)*7); return d;
+}
+function expand(spec){
+  const out = [];
+  spec.split(",").forEach(part=>{
+    const [a,b] = part.split("-").map(Number);
+    if (b === undefined) out.push(a);
+    else for (let i=a;i<=b;i++) out.push(i);
+  });
+  return out;
+}
+const WEEK_CACHE = new Map();
+function weeksOf(c){
+  const k = c.n + c.d + c.p;
+  if (WEEK_CACHE.has(k)) return WEEK_CACHE.get(k);
+  let ws = expand(c.w);
+  if (c.alt === 1) ws = ws.filter(w => w % 2 === 0);
+  if (c.alt === 2) ws = ws.filter(w => w % 2 === 1);
+  WEEK_CACHE.set(k, ws);
+  return ws;
+}
+function coursesOn(date){
+  const wk = weekOf(date);
+  const di = new Date(date).getDay();          // 0=周日
+  const dn = di === 0 ? 7 : di;                // 1=周一 … 7=周日
+  return COURSES.filter(c => c.d === dn && weeksOf(c).includes(wk))
+    .sort((a,b) => a.p - b.p);
+}
+function span(c){
+  const a = PERIODS[c.p], b = PERIODS[c.p + (c.span||1) - 1];
+  if (!c.span || c.span === 1) return {s:a.s, e:b.e, p:a.p};
+  const lo = a.p.split("-")[0], hi = b.p.split("-")[1];
+  return {s:a.s, e:b.e, p:lo + "-" + hi};
+}
+function toDate(hm, base){
+  const [h,m] = hm.split(":").map(Number);
+  const d = new Date(base); d.setHours(h,m,0,0); return d;
+}
+function parseWeeksText(c){
+  let t = "第" + c.w.replace(/,/g,"、").replace(/-/g,"–") + "周";
+  if (c.alt === 1) t += " · 双周";
+  if (c.alt === 2) t += " · 单周";
+  return t;
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
+function pad(n){ return String(n).padStart(2,"0"); }
+function md(d){ return (d.getMonth()+1) + "月" + d.getDate() + "日"; }
+
+/* ================= 渲染 ================= */
+let TAB = "today";
+let WK_VIEW = null;     // 本周视图当前浏览的周次
+
+const main = document.getElementById("main");
+const hd = document.getElementById("hd");
+const hw = document.getElementById("hw");
+const nowline = document.getElementById("nowline");
+
+const ICON_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>';
+
+const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+const IS_STANDALONE = window.navigator.standalone === true ||
+  window.matchMedia("(display-mode: standalone)").matches;
+
+function bannerHTML(){
+  if (!IS_IOS || IS_STANDALONE || localStorage.getItem("kb_banner") === "1") return "";
+  return `<div class="banner" id="bn">
+    <div><b>装到桌面，点一下就能看</b><br>点下方「分享」→「添加到主屏幕」，以后像 App 一样打开，没网也能用。</div>
+    <span class="x" id="bx">×</span></div>`;
+}
+
+
+function cardHTML(c, date, opts){
+  const sp = span(c);
+  const s = toDate(sp.s, date), e = toDate(sp.e, date);
+  const now = new Date();
+  const past = now > e;
+  const live = now >= s && now <= e;
+  const und = c.room.indexOf("待定") >= 0;
+  const weekBadge = c.alt === 1 ? '<span class="tag">双周</span>'
+                  : c.alt === 2 ? '<span class="tag">单周</span>' : "";
+  return `<div class="card ${past?"past":""} ${live?"live":""}" style="--c:${c.c}">
+    ${live ? '<span class="lv">正在上课</span>' : ''}
+    <div class="time">
+      <div class="s">${sp.s}</div>
+      <div class="e">${sp.e}</div>
+      <div class="p">${sp.p} 节</div>
+    </div>
+    <div class="body">
+      <div class="name">${esc(c.n)}${weekBadge}</div>
+      <div class="room ${und?"und":""}">${ICON_PIN}${esc(c.room)}</div>
+      <div class="meta">${esc(c.t)} · ${esc(c.full)}</div>
+    </div>
+  </div>`;
+}
+
+function nextClass(from){
+  // 从 from（含当天）开始找最近的一节课
+  for (let i=0;i<21;i++){
+    const d = new Date(from); d.setDate(d.getDate()+i);
+    const list = coursesOn(d);
+    for (const c of list){
+      const sp = span(c);
+      const start = toDate(sp.s, d);
+      if (start > new Date()) return {c, d, start, sp};
+    }
+  }
+  return null;
+}
+
+function renderToday(){
+  const t = today();
+  const wk = weekOf(t);
+  const list = coursesOn(t);
+  hd.innerHTML = `今天 <em>${DAYNAMES[t.getDay()]}</em>`;
+  hw.innerHTML = `<b>第 ${wk>0&&wk<=SEM_WEEKS?wk:"—"} 周</b><br>${md(t)}`;
+
+  // 顶部状态行
+  const now = new Date();
+  const nx = nextClass(t);
+  if (nx && nx.d.getTime() === t.getTime()){
+    const mins = Math.round((nx.start - now)/60000);
+    nowline.innerHTML = `<span class="dot"></span>下一节 <b>${nx.sp.s} ${esc(nx.c.n)}</b> · ${esc(nx.c.room)}
+      <span class="cd">${mins<=60 ? mins+" 分钟后" : Math.floor(mins/60)+" 小时 "+(mins%60)+" 分后"}</span>`;
+  } else if (nx){
+    const dd = Math.round((d0(nx.d) - t)/MS_DAY);
+    nowline.innerHTML = `<span class="dot off"></span>下次 <b>${dd===1?"明天":md(nx.d)+" "+DAYNAMES[nx.d.getDay()]} ${nx.sp.s} ${esc(nx.c.n)}</b> · ${esc(nx.c.room)}`;
+  } else {
+    nowline.innerHTML = `<span class="dot off"></span>近期没有课，好好休息`;
+  }
+
+  let html = bannerHTML();
+  if (!list.length){
+    html += `<div class="empty" style="margin-top:18px"><b>今天没有课</b>${wk>SEM_WEEKS?"本学期课程已结束":(weekOf(t)>=5&&weekOf(t)<=8?"军训期间，常规课暂停":"")}</div>`;
+    // 顺便给出下一天
+    const nn = nextClass(t);
+    if (nn){
+      const gap = Math.round((d0(nn.d) - t)/MS_DAY);
+      html += `<div class="sec">${gap===1?"明天":"近几天"}的课</div>` + cardHTML(nn.c, nn.d, {});
+    }
+  } else {
+    html += `<div class="day"><div class="dayhd"><b>${list.length} 节课</b><span>${list[0] ? span(list[0]).s : ""} 开始</span></div>`;
+    list.forEach(c => html += cardHTML(c, t));
+    html += `</div>`;
+  }
+  main.innerHTML = html;
+  const bx = document.getElementById("bx");
+  if (bx) bx.onclick = () => {
+    const b = document.getElementById("bn");
+    if (b) b.remove();
+    localStorage.setItem("kb_banner", "1");
+  };
+}
+
+function renderWeek(){
+  const t = today();
+  const wkNow = weekOf(t);
+  if (WK_VIEW === null) WK_VIEW = wkNow;
+  const wk = WK_VIEW;
+  const mon = weekMonday(wk);
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+
+  hd.innerHTML = `第 <em>${wk}</em> 周`;
+  hw.innerHTML = `<b>${wk===wkNow?"本周":"非本周"}</b><br>${md(mon)} – ${md(sun)}`;
+
+  const total = [0,1,2,3,4,5,6].reduce((n,i)=>{
+    const d = new Date(mon); d.setDate(mon.getDate()+i); return n + coursesOn(d).length;
+  },0);
+  nowline.innerHTML = total
+    ? `<span class="dot"></span>这周共 <b>${total} 节</b>课`
+    : `<span class="dot off"></span>这周没有常规课`;
+
+  let html = `<div class="wknav">
+      <button id="pw">‹</button>
+      <div class="t">第 ${wk} 周 <span>${md(mon)} 起</span></div>
+      <button id="nw">›</button>
+    </div>`;
+
+  // 星期条
+  const di = new Date(t).getDay();
+  html += `<div class="strip">`;
+  for (let i=0;i<7;i++){
+    const d = new Date(mon); d.setDate(mon.getDate()+i);
+    const has = coursesOn(d).length > 0;
+    const isToday = d.getTime() === t.getTime();
+    html += `<div class="dchip ${isToday?"on":""} ${has?"":"none"}">
+        ${DAYNAMES[d.getDay()]}<b>${d.getDate()}</b><span class="pt"></span></div>`;
+  }
+  html += `</div>`;
+
+  for (let i=0;i<7;i++){
+    const d = new Date(mon); d.setDate(mon.getDate()+i);
+    const list = coursesOn(d);
+    const isToday = d.getTime() === t.getTime();
+    html += `<div class="day"><div class="dayhd"><b>${DAYNAMES[d.getDay()]}</b>
+      <span>${md(d)}</span>${isToday?'<span style="color:var(--accent);font-weight:600">今天</span>':''}
+      <span class="rest">${list.length?list.length+" 节":"休息"}</span></div>`;
+    if (!list.length) html += `<div class="empty" style="padding:14px;font-size:13px">没课</div>`;
+    list.forEach(c => html += cardHTML(c, d));
+    html += `</div>`;
+  }
+  main.innerHTML = html;
+  document.getElementById("pw").onclick = () => { if (WK_VIEW>1){WK_VIEW--;renderWeek();} };
+  document.getElementById("nw").onclick = () => { if (WK_VIEW<SEM_WEEKS){WK_VIEW++;renderWeek();} };
+}
+
+function renderAll(){
+  hd.innerHTML = `全部课程 <em>${COURSES.length}</em>`;
+  hw.innerHTML = `<b>共 ${COURSES.length} 个时段</b><br>周日无课`;
+  const totalSessions = COURSES.reduce((n,c)=> n + weeksOf(c).length, 0);
+  nowline.innerHTML = `<span class="dot off"></span>本学期合计 <b>${totalSessions} 次</b>课`;
+
+  let html = `<div class="sec">按星期排列</div>`;
+  const sorted = [...COURSES].sort((a,b)=> a.d-b.d || a.p-b.p);
+  sorted.forEach(c=>{
+    const sp = span(c);
+    html += `<div class="item" style="--c:${c.c}">
+      <span class="swatch"></span>
+      <div style="flex:1;min-width:0">
+        <div class="n">${esc(c.n)}</div>
+        <div class="sub">${DAYNAMES[c.d]} ${sp.s}–${sp.e}（${sp.p} 节） · ${esc(c.room)}<br>
+          <span>${esc(c.t)} · ${parseWeeksText(c)}</span></div>
+      </div>
+    </div>`;
+  });
+  html += `<div class="hint">
+    课程时间与地点均取自原表《生科2601班级课表.xls》。<br>
+    “地点待定”的体育、基础化学实验以教务通知为准。<br>
+    军事技能（军训）第 5–8 周，期间常规课暂停。
+  </div>`;
+  main.innerHTML = html;
+}
+
+function render(){
+  if (TAB === "today") renderToday();
+  else if (TAB === "week") renderWeek();
+  else renderAll();
+}
+
+document.querySelectorAll("nav button").forEach(b=>{
+  b.onclick = () => {
+    TAB = b.dataset.tab;
+    document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on", x===b));
+    if (TAB === "week") WK_VIEW = weekOf(today());
+    render();
+    window.scrollTo({top:0, behavior:"instant"});
+  };
+});
+
+render();
+setInterval(()=>{ if (TAB === "today") renderToday(); }, 30000);
+
+/* 离线缓存 */
+if ("serviceWorker" in navigator){
+  window.addEventListener("load", ()=> navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
